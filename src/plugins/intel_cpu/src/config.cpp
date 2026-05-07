@@ -69,8 +69,18 @@ void Config::readProperties(const ov::AnyMap& prop, const ModelType modelType) {
             threads = streamExecutorConfig.get_threads();
             threadsPerStream = streamExecutorConfig.get_threads_per_stream();
             if (key == ov::num_streams.name()) {
-                ov::Any value = val.as<std::string>();
-                auto streams_value = value.as<ov::streams::Num>();
+                // Handle both numeric and string types safely to avoid unsafe iostream conversions
+                ov::Any streamValue;
+                if (val.is<std::string>()) {
+                    streamValue = val;  // Already a string, use directly
+                } else if (val.is<int64_t>()) {
+                    streamValue = std::to_string(val.as<int64_t>());
+                } else if (val.is<int>()) {
+                    streamValue = std::to_string(val.as<int>());
+                } else {
+                    streamValue = val;  // Let ov::Any handle other types
+                }
+                auto streams_value = streamValue.as<ov::streams::Num>();
                 if (streams_value == ov::streams::NUMA) {
                     modelDistributionPolicy = {};
                     hintPerfMode = ov::hint::PerformanceMode::LATENCY;
@@ -104,13 +114,23 @@ void Config::readProperties(const ov::AnyMap& prop, const ModelType modelType) {
             }
         } else if (key == ov::hint::num_requests.name()) {
             try {
-                ov::Any value = val.as<std::string>();
-                int val_i = value.as<int>();
+                // Handle both numeric and string types safely to avoid unsafe iostream conversions
+                int val_i = 0;
+                if (val.is<std::string>()) {
+                    ov::Any numValue = val;
+                    val_i = numValue.as<int>();
+                } else if (val.is<int64_t>()) {
+                    val_i = static_cast<int>(val.as<int64_t>());
+                } else if (val.is<int>()) {
+                    val_i = val.as<int>();
+                } else {
+                    val_i = val.as<int>();  // Let ov::Any handle conversion
+                }
                 OPENVINO_ASSERT(val_i >= 0, "invalid value.");
                 hintNumRequests = static_cast<uint32_t>(val_i);
             } catch (const ov::Exception&) {
                 OPENVINO_THROW("Wrong value ",
-                               val.as<std::string>(),
+                               val.is<std::string>() ? val.as<std::string>() : std::to_string(val_i),
                                "for property key ",
                                ov::hint::num_requests.name(),
                                ". Expected only >= 0.");
