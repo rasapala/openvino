@@ -111,9 +111,9 @@ void Config::readProperties(const ov::AnyMap& prop, const ModelType modelType) {
                                ". Expected only ov::log::Level::NO/ERR/WARNING/INFO/DEBUG/TRACE.");
             }
         } else if (key == ov::hint::num_requests.name()) {
+            int valI = 0;
             try {
                 // Handle both numeric and string types safely to avoid unsafe iostream conversions
-                int valI = 0;
                 if (val.is<std::string>()) {
                     ov::Any numValue = val;
                     valI = numValue.as<int>();
