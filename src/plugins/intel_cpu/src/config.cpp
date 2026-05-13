@@ -119,8 +119,11 @@ void Config::readProperties(const ov::AnyMap& prop, const ModelType modelType) {
                     valI = numValue.as<int>();
                 } else if (val.is<int64_t>()) {
                     valI = static_cast<int>(val.as<int64_t>());
+                } else if (val.is<int>()) {
+                    valI = val.as<int>();
                 } else {
-                    valI = val.as<int>();  // Handles int and lets ov::Any handle other types
+                    ov::Any numValue = val.as<std::string>();
+                    valI = numValue.as<int>();
                 }
                 OPENVINO_ASSERT(valI >= 0, "invalid value.");
                 hintNumRequests = static_cast<uint32_t>(valI);
