@@ -76,7 +76,7 @@ void Config::readProperties(const ov::AnyMap& prop, const ModelType modelType) {
                 } else if (val.is<int>()) {
                     streamValue = std::to_string(val.as<int>());
                 } else {
-                    streamValue = val;  // For string or other types
+                    streamValue = val.as<std::string>();  // Preserve legacy conversion for string-like values
                 }
                 auto streams_value = streamValue.as<ov::streams::Num>();
                 if (streams_value == ov::streams::NUMA) {
