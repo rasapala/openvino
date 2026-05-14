@@ -64,21 +64,12 @@ void Config::readProperties(const ov::AnyMap& prop, const ModelType modelType) {
         const auto& val = kvp.second;
         if (streamExecutorConfigKeys.end() !=
             std::find(std::begin(streamExecutorConfigKeys), std::end(streamExecutorConfigKeys), key)) {
-            streamExecutorConfig.set_property(key, val.as<std::string>());
+            streamExecutorConfig.set_property(key, val);
             streams = streamExecutorConfig.get_streams();
             threads = streamExecutorConfig.get_threads();
             threadsPerStream = streamExecutorConfig.get_threads_per_stream();
             if (key == ov::num_streams.name()) {
-                // Handle both numeric and string types safely to avoid unsafe iostream conversions
-                ov::Any streamValue;
-                if (val.is<int64_t>()) {
-                    streamValue = std::to_string(val.as<int64_t>());
-                } else if (val.is<int>()) {
-                    streamValue = std::to_string(val.as<int>());
-                } else {
-                    streamValue = val.as<std::string>();  // Preserve legacy conversion for string-like values
-                }
-                auto streams_value = streamValue.as<ov::streams::Num>();
+                auto streams_value = streamExecutorConfig.get_property(ov::num_streams.name()).as<ov::streams::Num>();
                 if (streams_value == ov::streams::NUMA) {
                     modelDistributionPolicy = {};
                     hintPerfMode = ov::hint::PerformanceMode::LATENCY;
